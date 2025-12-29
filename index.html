@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不婚话题KOL情感极性分布图</title>
+    <!-- 引入ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #fff;
+            padding: 10px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #chart-container {
+            width: 100%;
+            height: 100%;
+            min-height: 650px;
+            position: relative;
+        }
+        
+        #polar-chart {
+            width: 100%;
+            height: 100%;
+            min-height: 600px;
+        }
+        
+        .chart-footer {
+            text-align: center;
+            margin-top: 10px;
+            color: #ec407a;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            #polar-chart {
+                min-height: 550px;
+            }
+            
+            #chart-container {
+                min-height: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="chart-container">
+        <div id="polar-chart"></div>
+        <div class="chart-footer">数据来源：情感极性分析表 | 可视化：ECharts</div>
+    </div>
+
+    <script>
+        // 初始化ECharts实例
+        const chartDom = document.getElementById('polar-chart');
+        const myChart = echarts.init(chartDom);
+        
+        // 辅助函数：获取原始数值
+        function getRawValue(name) {
+            const rawData = {
+                '谨慎中立派-中性': 74,
+                '谨慎中立派-积极': 39,
+                '谨慎中立派-消极': 9,
+                '现实担忧派-中性': 148,
+                '现实担忧派-积极': 57,
+                '现实担忧派-消极': 17,
+                '理性支持派-中性': 149,
+                '理性支持派-积极': 62,
+                '理性支持派-消极': 12
+            };
+            return rawData[name] || '';
+        }
+        
+        // ECharts配置
+        const option = {
+            tooltip: {
+                trigger: 'item',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderColor: '#f06292',
+                borderWidth: 1,
+                textStyle: {
+                    color: '#880e4f',
+                    fontSize: 12
+                },
+                formatter: function(params) {
+                    const percent = (params.value * 100).toFixed(1);
+                    const rawValue = getRawValue(params.name);
+                    return `
+                    <div style="font-weight:bold;color:#880e4f;margin-bottom:5px">${params.name}</div>
+                    <div style="color:#ec407a">
+                        <span style="display:inline-block;width:10px;height:10px;background:${params.color};border-radius:50%;margin-right:5px"></span>
+                        比例：<b>${percent}%</b>
+                    </div>
+                    <div style="color:#f48fb1;margin-top:3px">原始值：${rawValue}</div>`;
+                }
+            },
+            
+            legend: {
+                top: 70,
+                textStyle: {
+                    color: '#880e4f',
+                    fontSize: 12,
+                    fontWeight: 'normal'
+                },
+                itemGap: 15,
+                itemWidth: 12,
+                itemHeight: 12,
+                data: ['中性', '积极', '消极']
+            },
+            
+            angleAxis: {
+                type: 'category',
+                data: ['谨慎中立派', '现实担忧派', '理性支持派'],
+                startAngle: 90,
+                axisLabel: {
+                    color: '#880e4f',
+                    fontSize: 14,
+                    fontWeight: 'bold',
+                    padding: [5, 5, 20, 5], // 增加内边距，特别是底部，避免被遮挡
+                    lineHeight: 18,
+                    formatter: function(value, index) {
+                        const totals = [122, 222, 223];
+                        // 使用更紧凑的格式
+                        return `${value}\n(总计:${totals[index]})`;
+                    }
+                },
+                axisLine: {
+                    show: true,
+                    lineStyle: {
+                        color: 'rgba(240, 98, 146, 0.3)',
+                        width: 1
+                    }
+                },
+                axisTick: {
+                    show: false
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: 'rgba(240, 98, 146, 0.1)',
+                        type: 'dashed'
+                    }
+                }
+            },
+            
+            radiusAxis: {
+                min: 0,
+                max: 1,
+                axisLabel: {
+                    color: '#ec407a',
+                    fontSize: 11,
+                    formatter: function(value) {
+                        return (value * 100).toFixed(0) + '%';
+                    }
+                },
+                axisLine: {
+                    show: false
+                },
+                axisTick: {
+                    show: false
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: 'rgba(240, 98, 146, 0.08)'
+                    }
+                },
+                splitArea: {
+                    show: true,
+                    areaStyle: {
+                        color: ['rgba(255, 255, 255, 0.1)', 'rgba(240, 98, 146, 0.02)']
+                    }
+                }
+            },
+            
+            polar: {
+                center: ['50%', '52%'], // 稍微向上调整中心点
+                radius: ['12%', '75%'] // 调整半径，为标签留出更多空间
+            },
+            
+            series: [
+                {
+                    name: '中性',
+                    type: 'bar',
+                    coordinateSystem: 'polar',
+                    data: [
+                        {
+                            name: '谨慎中立派-中性',
+                            value: 74/122,
+                            itemStyle: {
+                                color: '#f8bbd0'
+                            }
+                        },
+                        {
+                            name: '现实担忧派-中性',
+                            value: 148/222,
+                            itemStyle: {
+                                color: '#f8bbd0'
+                            }
+                        },
+                        {
+                            name: '理性支持派-中性',
+                            value: 149/223,
+                            itemStyle: {
+                                color: '#f8bbd0'
+                            }
+                        }
+                    ],
+                    barWidth: 28, // 稍微减小柱宽，为标签留出空间
+                    itemStyle: {
+                        borderRadius: [6, 6, 0, 0],
+                        borderWidth: 1,
+                        borderColor: '#fff',
+                        shadowColor: '#f8bbd0',
+                        shadowBlur: 8,
+                        shadowOffsetX: 1,
+                        shadowOffsetY: 2
+                    },
+                    emphasis: {
+                        itemStyle: {
+                            shadowColor: 'rgba(216, 27, 96, 0.3)',
+                            shadowBlur: 15,
+                            borderWidth: 2
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: function(params) {
+                            return (params.value * 100).toFixed(0) + '%';
+                        },
+                        color: '#fff',
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                        textShadowColor: 'rgba(216, 27, 96, 0.3)',
+                        textShadowBlur: 2
+                    }
+                },
+                {
+                    name: '积极',
+                    type: 'bar',
+                    coordinateSystem: 'polar',
+                    data: [
+                        {
+                            name: '谨慎中立派-积极',
+                            value: 39/122,
+                            itemStyle: {
+                                color: '#f48fb1'
+                            }
+                        },
+                        {
+                            name: '现实担忧派-积极',
+                            value: 57/222,
+                            itemStyle: {
+                                color: '#f48fb1'
+                            }
+                        },
+                        {
+                            name: '理性支持派-积极',
+                            value: 62/223,
+                            itemStyle: {
+                                color: '#f48fb1'
+                            }
+                        }
+                    ],
+                    barWidth: 28,
+                    itemStyle: {
+                        borderRadius: [6, 6, 0, 0],
+                        borderWidth: 1,
+                        borderColor: '#fff',
+                        shadowColor: 'rgba(216, 27, 96, 0.15)',
+                        shadowBlur: 8,
+                        shadowOffsetX: 1,
+                        shadowOffsetY: 2
+                    },
+                    emphasis: {
+                        itemStyle: {
+                            shadowColor: 'rgba(216, 27, 96, 0.3)',
+                            shadowBlur: 15,
+                            borderWidth: 2
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: function(params) {
+                            return (params.value * 100).toFixed(0) + '%';
+                        },
+                        color: '#fff',
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                        textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                        textShadowBlur: 2
+                    }
+                },
+                {
+                    name: '消极',
+                    type: 'bar',
+                    coordinateSystem: 'polar',
+                    data: [
+                        {
+                            name: '谨慎中立派-消极',
+                            value: 9/122,
+                            itemStyle: {
+                                color: '#f06292'
+                            }
+                        },
+                        {
+                            name: '现实担忧派-消极',
+                            value: 17/222,
+                            itemStyle: {
+                                color: '#f06292'
+                            }
+                        },
+                        {
+                            name: '理性支持派-消极',
+                            value: 12/223,
+                            itemStyle: {
+                                color: '#f06292'
+                            }
+                        }
+                    ],
+                    barWidth: 28,
+                    itemStyle: {
+                        borderRadius: [6, 6, 0, 0],
+                        borderWidth: 1,
+                        borderColor: '#fff',
+                        shadowColor: 'rgba(216, 27, 96, 0.15)',
+                        shadowBlur: 8,
+                        shadowOffsetX: 1,
+                        shadowOffsetY: 2
+                    },
+                    emphasis: {
+                        itemStyle: {
+                            shadowColor: 'rgba(216, 27, 96, 0.3)',
+                            shadowBlur: 15,
+                            borderWidth: 2
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: function(params) {
+                            return (params.value * 100).toFixed(0) + '%';
+                        },
+                        color: '#fff',
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                        textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                        textShadowBlur: 2
+                    }
+                }
+            ],
+            
+            title: {
+                text: '不婚话题KOL文本下评论的情感极性比例分布',
+                left: 'center',
+                top: 18,
+                textStyle: {
+                    color: '#880e4f',
+                    fontSize: 18,
+                    fontWeight: 'bold',
+                    fontFamily: 'Microsoft YaHei, Arial, sans-serif'
+                }
+            },
+            
+            backgroundColor: '#fff',
+            
+            grid: {
+                containLabel: true,
+                top: 100,
+                bottom: 80,
+                left: 60,
+                right: 60
+            },
+            
+            animation: true,
+            animationDuration: 1000,
+            animationEasing: 'cubicOut'
+        };
+
+        // 应用配置
+        myChart.setOption(option);
+
+        // 响应窗口大小变化
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+        
+        // 初始调整：确保图表加载完成后标签显示完整
+        setTimeout(() => {
+            myChart.resize();
+        }, 100);
+    </script>
+</body>
+</html>
